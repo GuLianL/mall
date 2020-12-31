@@ -18,14 +18,88 @@
 <script>
   export default {
     name: "Swiper",
-    data(){
-      return {
-        slideCount: [],
-        showIndicator: false
+    props:{
+      interval:{
+        type: Number,
+        default: 2000
+      },
+      showIndicator: {
+        type: Boolean,
+        default: true
+      },
+      animDuration:{
+        type: Number,
+        default: 300
       }
     },
+    data(){
+      return {
+        playTimer: null,
+        slideCount: 0, //元素个数
+        totalWidth: 0, // swiper的宽度
+        swiperStyle: {}, //swiper样式
+        currentIndex: 1, //当前的index
+        scrolling: false, //是否正在滚动
+      }
+    },
+    mounted(){
+      setTimeout(()=>{
+        this.handleDom()
+
+        this.startTimer()
+      }, 100)
+    },
     methods:{
+      startTimer(){
+        this.playTimer = window.setInterval(()=>{
+          this.currentIndex++
+          this.scrollContent(-this.currentIndex * this.totalWidth)
+        }, this.interval)
+      },
+      stopTimer(){
+        window.clearInterval(this.playTimer)
+      },
+      /*
+      * 滚动到正确的位置
+      * */
+      scrollContent(currenrPosition){
+        this.setTransform(currenrPosition)
+        this.checkPosition()
+      },
+      setTransform(position){
+        this.swiperStyle.transform = `translate3d(${position}px, 0, 0)`
+      },
+      /*
+      * 检验正确的位置
+      * */
+      checkPosition(){
+        window.setTimeout(()=>{
+          this.swiperStyle.transform = '0ms'
+          console.log(this.currentIndex, this.slideCount)
+          if(this.currentIndex >= this.slideCount + 1){
+            this.currentIndex = 1
+          }
+        })
+      },
+      handleDom(){
+        let swiperEl = document.querySelector('.swiper')
+        let swiperEls = document.getElementsByClassName('slide')
+
+        this.slideCount = swiperEls.length //滚动的总数
+        this.totalWidth = swiperEl.offsetWidth //获取滚动区域的宽度
+        this.swiperStyle = swiperEl.style
+
+      },
+      /*
+      * 拖动事件的处理
+      * */
       touchstart(){
+        //1、如果正在滚动，则不可以拖动
+        if(this.scrolling) return false
+
+        //2、停止定时器
+        this.stopTimer();
+
         console.log('touchstart')
       },
       touchmove(){
